@@ -1,0 +1,32 @@
+# batch_simulator.py
+# Run simulations for multiple rent levels across all regions
+
+from regional_simulator import simulate_region
+
+RENT_LEVELS = [500, 600, 700, 800, 900, 1000]
+
+def run_batch(regions):
+    print("\nMulti-Rent Batch Simulation")
+    print("===============================================================")
+
+    for rent in RENT_LEVELS:
+        print(f"\nRent = ${rent}")
+        print("City | Adj Base M | Maintenance | Profit | Eviction Prob")
+        print("---------------------------------------------------------------")
+
+        for city, data in regions.items():
+            result = simulate_region(
+                rent=rent,
+                maintenance_multiplier=data["maintenance_multiplier"],
+                strictness=data["strictness"]
+            )
+            print(f"{city} | {result['adjusted_base_maintenance']} | "
+                  f"{result['maintenance']} | {result['profit']} | "
+                  f"{result['eviction_probability']}")
+
+if __name__ == "__main__":
+    # Example: replace with JSON or CSV loader
+    sample_regions = {
+        "Example City": {"maintenance_multiplier": 1.0, "strictness": 0.5}
+    }
+    run_batch(sample_regions)
