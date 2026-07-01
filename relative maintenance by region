@@ -1,0 +1,61 @@
+import math
+
+# -----------------------------
+# Core constants (can be overridden)
+# -----------------------------
+MONTHLY_RENT = 500.0
+BASE_MAINTENANCE = 30.0
+TAMA_FACTOR = math.pi**2 / 6  # ≈ 1.644934
+
+
+# -----------------------------
+# Tama maintenance collapse
+# -----------------------------
+def tama_maintenance(base_maintenance: float) -> float:
+    """
+    Collapse maintenance using Tama engine:
+    M_tama = base_maintenance * (pi^2 / 6)
+    """
+    return base_maintenance * TAMA_FACTOR
+
+
+# -----------------------------
+# Relative maintenance by region
+# -----------------------------
+def relative_maintenance_by_region(
+    monthly_rent: float,
+    base_maintenance: float,
+    maintenance_multiplier: float,
+):
+    """
+    Compute relative maintenance and profit for a single region.
+
+    maintenance_multiplier: scalar factor for region (e.g. 1.0, 1.2, 0.8)
+    """
+    adjusted_base = base_maintenance * maintenance_multiplier
+    m_tama = tama_maintenance(adjusted_base)
+    profit_per_unit = monthly_rent - m_tama
+    two_day_rent = monthly_rent / 15.0
+
+    return {
+        "monthly_rent": round(monthly_rent, 2),
+        "base_maintenance": round(base_maintenance, 2),
+        "maintenance_multiplier": round(maintenance_multiplier, 3),
+        "adjusted_base_maintenance": round(adjusted_base, 2),
+        "tama_maintenance": round(m_tama, 2),
+        "profit_per_unit": round(profit_per_unit, 2),
+        "two_day_rent": round(two_day_rent, 2),
+    }
+
+
+# -----------------------------
+# Example usage (safe to remove)
+# -----------------------------
+if __name__ == "__main__":
+    # Example: region with multiplier 1.0 (neutral)
+    result = relative_maintenance_by_region(
+        monthly_rent=MONTHLY_RENT,
+        base_maintenance=BASE_MAINTENANCE,
+        maintenance_multiplier=1.0,
+    )
+    print(result)
