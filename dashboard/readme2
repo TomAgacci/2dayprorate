@@ -2,3 +2,23 @@ load Chart.js locally:
 
 html
 <script src="chart.js"></script>
+
+
+Load them in your HTML:
+html
+<script src="chart.js"></script>
+<script type="module">
+    import { createBarChart, createLineChart } from "./charts.js";
+    import { applyTheme } from "./chart_config.js";
+</script>
+
+Replace your inline chart code with wrapper calls:
+javascript
+singleChart = createBarChart(ctx, city, [
+    data.maintenance,
+    data.profit,
+    data.eviction_probability * 100
+]);
+
+javascript
+batchChart = createLineChart(ctx, cities, maintenance, profit, 
