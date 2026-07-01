@@ -1,0 +1,14 @@
+result = prorate_with_maintenance(
+    monthly_rent=500,
+    base_maintenance=30
+)
+
+print(result)
+
+
+{
+  'monthly_rent': 500,
+  'maintenance_tama': 49.35,
+  'adjusted_rent': 549.35,
+  'two_day_rent': 36.62
+}
