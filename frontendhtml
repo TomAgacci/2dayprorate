@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>2dayprorate Regional Dashboard</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f5f5f5;
+        padding: 20px;
+    }
+    h1 {
+        margin-bottom: 10px;
+    }
+    .panel {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    select, input {
+        padding: 8px;
+        font-size: 16px;
+        margin-right: 10px;
+    }
+    button {
+        padding: 10px 16px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+    th, td {
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+        text-align: left;
+    }
+    th {
+        background: #eee;
+    }
+</style>
+</head>
+<body>
+
+<h1>2dayprorate Regional Dashboard</h1>
+
+<div class="panel">
+    <h2>Single Region Simulation</h2>
+    <label>City:</label>
+    <select id="citySelect"></select>
+
+    <label>Rent:</label>
+    <input type="number" id="rentInput" value="600">
+
+    <button onclick="runSingle()">Run</button>
+
+    <table id="singleTable" style="display:none;">
+        <thead>
+            <tr>
+                <th>City</th>
+                <th>Adjusted Base M</th>
+                <th>Maintenance</th>
+                <th>Profit</th>
+                <th>Eviction Prob</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<div class="panel">
+    <h2>Batch Simulation (All Cities)</h2>
+    <label>Rent:</label>
+    <input type="number" id="batchRentInput" value="600">
+
+    <button onclick="runBatch()">Run Batch</button>
+
+    <table id="batchTable" style="display:none;">
+        <thead>
+            <tr>
+                <th>City</th>
+                <th>Adjusted Base M</th>
+                <th>Maintenance</th>
+                <th>Profit</th>
+                <th>Eviction Prob</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<script>
+const API_BASE = "http://localhost:5000";
+
+// Load region list from backend
+async function loadCities() {
+    const res = await fetch(API_BASE + "/batch?rent=600");
+    const data = await res.json();
+    const select = document.getElementById("citySelect");
+
+    Object.keys(data).forEach(city => {
+        const opt = document.createElement("option");
+        opt.value = city;
+        opt.textContent = city;
+        select.appendChild(opt);
+    });
+}
+
+async function runSingle() {
+    const city = document.getElementById("citySelect").value;
+    const rent = document.getElementById("rentInput").value;
+
+    const res = await fetch(`${API_BASE}/simulate?city=${encodeURIComponent(city)}&rent=${rent}`);
+    const data = await res.json();
+
+    const table = document.getElementById("singleTable");
+    const tbody = table.querySelector("tbody");
+    tbody.innerHTML = "";
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+        <td>${city}</td>
+        <td>${data.adjusted_base_maintenance}</td>
+        <td>${data.maintenance}</td>
+        <td>${data.profit}</td>
+        <td>${data.eviction_probability}</td>
+    `;
+    tbody.appendChild(row);
+    table.style.display = "table";
+}
+
+async function runBatch() {
+    const rent = document.getElementById("batchRentInput").value;
+
+    const res = await fetch(`${API_BASE}/batch?rent=${rent}`);
+    const data = await res.json();
+
+    const table = document.getElementById("batchTable");
+    const tbody = table.querySelector("tbody");
+    tbody.innerHTML = "";
+
+    Object.keys(data).forEach(city => {
+        const r = data[city];
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td>${city}</td>
+            <td>${r.adjusted_base_maintenance}</td>
+            <td>${r.maintenance}</td>
+            <td>${r.profit}</td>
+            <td>${r.eviction_probability}</td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    table.style.display = "table";
+}
+
+// Initialize dashboard
+loadCities();
+</script>
+
+</body>
+</html>
