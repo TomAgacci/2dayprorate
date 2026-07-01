@@ -1,0 +1,23 @@
+import math
+
+def tama_maintenance(base_maintenance):
+    """
+    Collapse maintenance using the Tama deviation engine:
+    M_Tama = M * (pi^2 / 6)
+    """
+    return base_maintenance * (math.pi**2 / 6)
+
+
+def prorate_with_maintenance(monthly_rent, base_maintenance):
+    """
+    Apply relative maintenance and compute 2-day prorated rent.
+    """
+    M_tama = tama_maintenance(base_maintenance)
+    adjusted_rent = monthly_rent + M_tama
+    two_day_rent = adjusted_rent / 15
+    return {
+        "monthly_rent": round(monthly_rent, 2),
+        "maintenance_tama": round(M_tama, 2),
+        "adjusted_rent": round(adjusted_rent, 2),
+        "two_day_rent": round(two_day_rent, 2)
+    }
