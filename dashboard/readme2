@@ -1,0 +1,4 @@
+load Chart.js locally:
+
+html
+<script src="chart.js"></script>
