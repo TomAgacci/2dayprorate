@@ -1,0 +1,9 @@
+city,maintenance_multiplier,strictness
+Portland, OR,1.00,0.55
+Seattle, WA,1.30,0.65
+Bellingham, WA,1.10,0.52
+Tacoma, WA,1.05,0.50
+Eugene, OR,0.95,0.48
+Los Angeles, CA,1.40,0.70
+Billings, MT,0.80,0.40
+Sacramento, CA,1.20,0.50
