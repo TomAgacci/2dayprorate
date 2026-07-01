@@ -1,0 +1,10 @@
+Just run:
+
+python3 web_api.py
+
+Then open:
+
+Code
+http://localhost:5000/dashboard/index.html
+
+Have to compile the server.
