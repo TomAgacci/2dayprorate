@@ -21,4 +21,4 @@ singleChart = createBarChart(ctx, city, [
 ]);
 
 javascript
-batchChart = createLineChart(ctx, cities, maintenance, profit, 
+batchChart = createLineChart(ctx, cities, maintenance, profit, eviction);
