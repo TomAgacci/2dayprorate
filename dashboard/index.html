@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>2dayprorate Mobile Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #fafafa;
+        margin: 0;
+        padding: 10px;
+    }
+
+    h1 {
+        font-size: 1.6rem;
+        text-align: center;
+        margin-bottom: 15px;
+    }
+
+    .panel {
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 1rem;
+    }
+
+    select, input {
+        width: 100%;
+        padding: 12px;
+        font-size: 1rem;
+        margin-bottom: 12px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+    }
+
+    button {
+        width: 100%;
+        padding: 14px;
+        font-size: 1.1rem;
+        background: #0078ff;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        margin-top: 10px;
+        cursor: pointer;
+    }
+
+    button:active {
+        background: #005fcc;
+    }
+
+    table {
+        width: 100%;
+        margin-top: 15px;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+
+    th, td {
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+    }
+
+    th {
+        background: #eee;
+    }
+
+    canvas {
+        margin-top: 20px;
+        width: 100% !important;
+        height: auto !important;
+    }
+</style>
+</head>
+<body>
+
+<h1>2dayprorate Mobile Dashboard</h1>
+
+<div class="panel">
+    <h2>Single Region Simulation</h2>
+
+    <label>City</label>
+    <select id="citySelect"></select>
+
+    <label>Rent</label>
+    <input type="number" id="rentInput" value="600">
+
+    <button onclick="runSingle()">Run Simulation</button>
+
+    <table id="singleTable" style="display:none;">
+        <thead>
+            <tr>
+                <th>City</th>
+                <th>Adj Base M</th>
+                <th>Maintenance</th>
+                <th>Profit</th>
+                <th>Eviction</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <canvas id="singleChart"></canvas>
+</div>
+
+<div class="panel">
+    <h2>Batch Simulation (All Cities)</h2>
+
+    <label>Rent</label>
+    <input type="number" id="batchRentInput" value="600">
+
+    <button onclick="runBatch()">Run Batch</button>
+
+    <table id="batchTable" style="display:none;">
+        <thead>
+            <tr>
+                <th>City</th>
+                <th>Adj Base M</th>
+                <th>Maintenance</th>
+                <th>Profit</th>
+                <th>Eviction</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <canvas id="batchChart"></canvas>
+</div>
+
+<script>
+const API_BASE = "http://localhost:5000";
+
+// Load cities dynamically
+async function loadCities() {
+    const res = await fetch(API_BASE + "/batch?rent=600");
+    const data = await res.json();
+    const select = document.getElementById("citySelect");
+
+    Object.keys(data).forEach(city => {
+        const opt = document.createElement("option");
+        opt.value = city;
+        opt.textContent = city;
+        select.appendChild(opt);
+    });
+}
+
+let singleChart = null;
+let batchChart = null;
+
+async function runSingle() {
+    const city = document.getElementById("citySelect").value;
+    const rent = document.getElementById("rentInput").value;
+
+    const res = await fetch(`${API_BASE}/simulate?city=${encodeURIComponent(city)}&rent=${rent}`);
+    const data = await res.json();
+
+    const table = document.getElementById("singleTable");
+    const tbody = table.querySelector("tbody");
+    tbody.innerHTML = "";
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+        <td>${city}</td>
+        <td>${data.adjusted_base_maintenance}</td>
+        <td>${data.maintenance}</td>
+        <td>${data.profit}</td>
+        <td>${data.eviction_probability}</td>
+    `;
+    tbody.appendChild(row);
+    table.style.display = "table";
+
+    // Chart.js visualization
+    if (singleChart) singleChart.destroy();
+    const ctx = document.getElementById("singleChart").getContext("2d");
+
+    singleChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: ["Maintenance", "Profit", "Eviction Probability"],
+            datasets: [{
+                label: city,
+                data: [
+                    data.maintenance,
+                    data.profit,
+                    data.eviction_probability * 100
+                ],
+                backgroundColor: ["#0078ff", "#00c853", "#ff5252"]
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+}
+
+async function runBatch() {
+    const rent = document.getElementById("batchRentInput").value;
+
+    const res = await fetch(`${API_BASE}/batch?rent=${rent}`);
+    const data = await res.json();
+
+    const table = document.getElementById("batchTable");
+    const tbody = table.querySelector("tbody");
+    tbody.innerHTML = "";
+
+    const cities = Object.keys(data);
+    const maintenance = cities.map(c => data[c].maintenance);
+    const profit = cities.map(c => data[c].profit);
+    const eviction = cities.map(c => data[c].eviction_probability * 100);
+
+    cities.forEach(city => {
+        const r = data[city];
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td>${city}</td>
+            <td>${r.adjusted_base_maintenance}</td>
+            <td>${r.maintenance}</td>
+            <td>${r.profit}</td>
+            <td>${r.eviction_probability}</td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    table.style.display = "table";
+
+    // Chart.js batch chart
+    if (batchChart) batchChart.destroy();
+    const ctx = document.getElementById("batchChart").getContext("2d");
+
+    batchChart = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: cities,
+            datasets: [
+                {
+                    label: "Maintenance",
+                    data: maintenance,
+                    borderColor: "#0078ff",
+                    fill: false
+                },
+                {
+                    label: "Profit",
+                    data: profit,
+                    borderColor: "#00c853",
+                    fill: false
+                },
+                {
+                    label: "Eviction Probability (%)",
+                    data: eviction,
+                    borderColor: "#ff5252",
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+}
+
+// Initialize dashboard
+loadCities();
+</script>
+
+</body>
+</html>
